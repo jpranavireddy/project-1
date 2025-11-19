@@ -14,7 +14,7 @@ def engine():
     return AIAnalysisEngine()
 
 
-@settings(max_examples=50)
+@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(
     quality_score=st.floats(min_value=0.0, max_value=39.0),
     complexity_score=st.floats(min_value=0.0, max_value=29.0),
@@ -54,7 +54,7 @@ def test_quality_issues_generate_alerts(engine, quality_score, complexity_score,
         assert 'poor_documentation' in alert_types
 
 
-@settings(max_examples=50)
+@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(
     negative_ratio=st.floats(min_value=0.41, max_value=1.0),
     total_comments=st.integers(min_value=5, max_value=20)
