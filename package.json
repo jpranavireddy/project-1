@@ -1,0 +1,20 @@
+{
+  "name": "dev-performance-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "yarn workspaces run test",
+    "test:coverage": "yarn workspaces run test:coverage",
+    "lint": "yarn workspaces run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "build": "yarn workspaces run build",
+    "dev": "docker-compose up"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0"
+  }
+}

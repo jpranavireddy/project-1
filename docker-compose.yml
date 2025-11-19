@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: dev-tracker-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: dev-performance-tracker
+
+  redis:
+    image: redis:7-alpine
+    container_name: dev-tracker-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: dev-tracker-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+  api-gateway:
+    build:
+      context: ./packages/api-gateway
+      dockerfile: Dockerfile
+    container_name: dev-tracker-api-gateway
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/api-gateway:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/dev-performance-tracker
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    command: npm run dev
+
+  github-integration:
+    build:
+      context: ./packages/github-integration
+      dockerfile: Dockerfile
+    container_name: dev-tracker-github-integration
+    volumes:
+      - ./packages/github-integration:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/dev-performance-tracker
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - mongodb
+      - rabbitmq
+    command: npm run dev
+
+  ai-analysis:
+    build:
+      context: ./packages/ai-analysis
+      dockerfile: Dockerfile
+    container_name: dev-tracker-ai-analysis
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./packages/ai-analysis:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MONGODB_URI=mongodb://mongodb:27017/dev-performance-tracker
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - mongodb
+      - rabbitmq
+    command: python -m flask run --host=0.0.0.0
+
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+    container_name: dev-tracker-frontend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./packages/frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3000
+    command: npm start
+
+volumes:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
